@@ -20,9 +20,8 @@ item_store_map = {}
 item_batch_map = {}
 warehouse_pricecode_map={}
 storemap={"01":"998","STR01":"999"}
-
 def login():
-	payload = "{\"CompanyDB\":\"DJTRETAILERSTESTONE\",\"UserName\":\"b1cloud\\\\nav.user01\",\"Password\":\"India***2018\"\r\n}"
+	payload = "{\"CompanyDB\":\"DJTRETAILERSTESTTWO\",\"UserName\":\"b1cloud\\\\nav.user01\",\"Password\":\"India***2018\"\r\n}"
 	resp = requests.post(BASE_URL+"Login", headers={"Content-Type":"application/json"}, data=payload)
 	# print payload
 	#data={"CompanyDB":"DJTRETAILERSTEST","UserName":"b1cloud\\nav.user01","Password":"India***2018"}
@@ -54,15 +53,15 @@ def fetch_item_details(items_list):
 		itemCode = str(item["ItemCode"].encode('utf-8'))
 		product_details["sku"] = itemCode
 		try:
-			product_details["productName"] = str(item["ItemName"].encode('utf-8')).replace(',','_')
+			product_details["productName"] = validateStr(str(item["ItemName"].encode('utf-8')))
 		except:
 				product_details["productName"] = str(item["ItemName"])
 		try:
-			product_details["productDescription"] = str(item["ForeignName"].encode('utf-8')).replace(',','_')
+			product_details["productDescription"] = validateStr(str(item["ForeignName"].encode('utf-8')))
 		except:
 			product_details["productDescription"] = str(item["ForeignName"])
 		try:
-			inventoryUOM = str(item["InventoryUOM"].encode('utf-8')).replace(',','_')
+			inventoryUOM = str(item["InventoryUOM"].encode('utf-8'))
 		except:
 			inventoryUOM = str(item["InventoryUOM"])
 		if inventoryUOM == "KILOGRAM":
@@ -92,9 +91,9 @@ def fetch_item_details(items_list):
 
 			for price in price_list:
 				if str(price["PriceList"]) == str(warehouse_pricecode_map[store["WarehouseCode"]]["MRP_CODE"]):
-					product_price_details["productMRP"] = price["Price"]
+					product_price_details["productMRP"] = roundOfDecimal(price["Price"])
 				elif str(price["PriceList"]) == str(warehouse_pricecode_map[store["WarehouseCode"]]["CSP_CODE"]):
-					product_price_details["shopPrice"] = price["Price"]
+					product_price_details["shopPrice"] = roundOfDecimal(price["Price"])
 
 			if str(item["ManageBatchNumbers"])=="tYES":
 				batchList = batch_details_list.get(itemCode)
@@ -107,11 +106,22 @@ def fetch_item_details(items_list):
 						temp_product_price_details["shopPrice"]=product_price_details["shopPrice"]
 						temp_product_price_details["isLatestPrice"] = "Y"
 						temp_product_price_details["warehouseCode"] = product_price_details["warehouseCode"]
-						temp_product_price_details["productMRP"]=batch["BatchMRP"]
+						temp_product_price_details["productMRP"]=roundOfDecimal(batch["BatchMRP"])
 						product_price_details_list.append(temp_product_price_details)
 			else:
 				product_price_details_list.append(product_price_details)
-			populate_tax_code(item)
+		populate_tax_code(item)
+
+def validateStr(text):
+	text = text.replace(",","-")
+	text = text.replace("\\n","-")
+	return text
+
+def roundOfDecimal(value):
+	if value is None:
+		return 0
+	else:
+		return round(float(str(value)),2)
 
 def fetch_barcode_details(barcodes_list):
 	for barcode in barcodes_list:
@@ -226,8 +236,9 @@ def write_to_csv():
 	with open('D:\DJT\scripts\sku_tax_rel.csv', 'w') as sku_tax_rel:
 		for tax_code, items in taxcode_rate_map.items():
 			for item in items:
-				sku_tax_rel.write(item+","+"DJT-"+tax_code)
-				sku_tax_rel.write('\n')
+				for key in warehouse_pricecode_map:
+					sku_tax_rel.write(item+","+"DJT-"+tax_code+","+storemap[key])
+					sku_tax_rel.write('\n')
 		sku_tax_rel.close()
 	with open('D:\DJT\scripts\\tax_category.csv', 'w') as tax_category:
 		for tax_code in taxcode_rate_map:
@@ -242,12 +253,5 @@ if __name__ == "__main__" :
 	#login()
 	get_items()
 	get_barcodes()
-	#print("Printing item store map .... \n")
-	#print(item_store_map)
-	# for barcode_details in barcode_details_list:
-	# 	print(item_store_map.get(barcode_details["sku"]))
-	# 	for store in storeList:
-	# 		bd.write(barcode_details["barcodeId"] + "," + barcode_details["sku"] + "," + storemap[store])
-	# 		bd.write('\n')
-	# print(item_store_map[barcode_details["400001"]])
+	print(warehouse_pricecode_map)
 	write_to_csv()
