@@ -5,7 +5,7 @@ import csv
 # BASE_URL = "https://madrid.b1cloud.in:50000/b1s/v1/"
 # company_db = "DJTRETAILERSTEST"
 BASE_URL = "https://oklahoma.b1cloud.in:50000/b1s/v1/"
-company_db = "DJTRETAILERSTESTONE"
+company_db = "DJTRETAILERSTESTTWO"
 user_name = "b1cloud\\nav.user01"
 password = "India***2018"
 
