@@ -14,6 +14,7 @@ public class BBIdocStatusBO {
 				for (BBIdocStatusDomain bbIdocStatusDomain : data) {
 					executor.submit(new BBIdocStatusProcess(bbIdocStatusDomain));
 				} 
+				return true;
 			} catch (Exception e ) {
 				LOGGER.severe(ExceptionUtils.getStackTrace(e));
 			}

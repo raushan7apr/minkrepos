@@ -3,7 +3,7 @@ package com.perpule.domain;
 public class BBIdocStatusDetailDomain {
 	String siteCode;
 	String idocNumber;
-	String oldFIleName;
+	String oldFileName;
 	String newFileName;
 	
 	public String getSiteCode() {
@@ -18,11 +18,11 @@ public class BBIdocStatusDetailDomain {
 	public void setIdocNumber(String idocNumber) {
 		this.idocNumber = idocNumber;
 	}
-	public String getOldFIleName() {
-		return oldFIleName;
+	public String getOldFileName() {
+		return oldFileName;
 	}
-	public void setOldFIleName(String oldFIleName) {
-		this.oldFIleName = oldFIleName;
+	public void setOldFileName(String oldFIleName) {
+		this.oldFileName = oldFIleName;
 	}
 	public String getNewFileName() {
 		return newFileName;

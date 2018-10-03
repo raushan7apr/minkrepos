@@ -1,5 +1,6 @@
 package com.perpule.bo;
 
+import java.io.InterruptedIOException;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.logging.Logger;
@@ -33,17 +34,22 @@ public class BBIdocStatusProcess implements Runnable{
 			headers.put("Content-Type", "application/json");
 			Gson gson = new Gson();
 			String jsonReqData = gson.toJson(bbIdocStatusDomain);
-			HTTPResponseObject hTTPResponseObject = HTTPUtility
-					.invokeHTTPRequestAndGetResponse(IDOCConstants.API_URL, "POST", headers, jsonReqData);
-			if (hTTPResponseObject.getStatusCode() != 200) {
-					Thread.sleep(2000);
-					hTTPResponseObject = HTTPUtility.invokeHTTPRequestAndGetResponse(IDOCConstants.API_URL,
-							"POST", headers, jsonReqData);
-					if (hTTPResponseObject.getStatusCode() != 200) {
-						MQPosting(jsonReqData, IDOCConstants.MQ_URL, IDOCConstants.MQ_SUBJECT);
-					}
+			HTTPResponseObject hTTPResponseObject=null;
+			try {
+				hTTPResponseObject = HTTPUtility
+						.invokeHTTPRequestAndGetResponse(IDOCConstants.API_URL, "POST", headers, jsonReqData);
+				if (hTTPResponseObject != null && hTTPResponseObject.getStatusCode() != 200) {
+						Thread.sleep(2000);
+						hTTPResponseObject = HTTPUtility.invokeHTTPRequestAndGetResponse(IDOCConstants.API_URL,
+								"POST", headers, jsonReqData);
+				}
+			} catch (Exception e) {
+				LOGGER.severe(ExceptionUtils.getStackTrace(e));
 			}
-		} catch (InterruptedException | JMSException e) {
+			if (hTTPResponseObject == null || hTTPResponseObject.getStatusCode() != 200) {
+				MQPosting(jsonReqData, IDOCConstants.MQ_URL, IDOCConstants.MQ_SUBJECT);
+			}
+		} catch (Exception e) {
 			LOGGER.severe(ExceptionUtils.getStackTrace(e));
 		} 
 	}
