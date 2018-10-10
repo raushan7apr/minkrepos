@@ -11,6 +11,7 @@ public class BBIdocStatusBO {
         public boolean sendIdocStatus(List<BBIdocStatusDomain> data) {
         	try {
         		ExecutorService executor = Executors.newFixedThreadPool(10);
+        		LOGGER.info("Number of IDOCs Received :" + data.size());
 				for (BBIdocStatusDomain bbIdocStatusDomain : data) {
 					executor.submit(new BBIdocStatusProcess(bbIdocStatusDomain));
 				} 

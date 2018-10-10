@@ -2,6 +2,7 @@ package com.perpule.idocstatus.bo;
 
 import java.io.InterruptedIOException;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.logging.Logger;
 import javax.jms.Connection;
@@ -13,6 +14,8 @@ import javax.jms.Session;
 import javax.jms.TextMessage;
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.commons.lang3.exception.ExceptionUtils;
+import org.json.JSONObject;
+
 import com.google.gson.Gson;
 import com.perpule.idocstatus.constants.IDOCConstants;
 import com.perpule.idocstatus.domain.BBIdocStatusDomain;
@@ -35,19 +38,39 @@ public class BBIdocStatusProcess implements Runnable{
 			Gson gson = new Gson();
 			String jsonReqData = gson.toJson(bbIdocStatusDomain);
 			HTTPResponseObject hTTPResponseObject=null;
+			boolean status=false;
 			try {
 				hTTPResponseObject = HTTPUtility
 						.invokeHTTPRequestAndGetResponse(IDOCConstants.API_URL, "POST", headers, jsonReqData);
-				if (hTTPResponseObject != null && hTTPResponseObject.getStatusCode() != 200) {
+				String firstResponse = hTTPResponseObject.getResult();
+				if(firstResponse!=null) {
+					JSONObject obj =  new JSONObject(firstResponse);
+					if(obj != null && obj.has("isSuccessful")) {
+						status = obj.getBoolean("isSuccessful");
+					}
+				}
+				if (hTTPResponseObject != null && status == false) {
+						LOGGER.info("Sleeping for 2 Minutes..");
 						Thread.sleep(2000);
+						LOGGER.info("UP after 2 minutes!!");
 						hTTPResponseObject = HTTPUtility.invokeHTTPRequestAndGetResponse(IDOCConstants.API_URL,
 								"POST", headers, jsonReqData);
+						String lastResponse = hTTPResponseObject.getResult();
+						if(lastResponse!=null) {
+							JSONObject obj =  new JSONObject(lastResponse);
+							if(obj != null && obj.has("isSuccessful")) {
+								status = obj.getBoolean("isSuccessful");
+							}
+						}
 				}
 			} catch (Exception e) {
 				LOGGER.severe(ExceptionUtils.getStackTrace(e));
 			}
-			if (hTTPResponseObject == null || hTTPResponseObject.getStatusCode() != 200) {
+			if (hTTPResponseObject == null || status == false) {
+				LOGGER.info("Sending via Messaging Queue...");
 				MQPosting(jsonReqData, IDOCConstants.MQ_URL, IDOCConstants.MQ_SUBJECT);
+			}else {
+				LOGGER.info("Sent via API...");
 			}
 		} catch (Exception e) {
 			LOGGER.severe(ExceptionUtils.getStackTrace(e));
