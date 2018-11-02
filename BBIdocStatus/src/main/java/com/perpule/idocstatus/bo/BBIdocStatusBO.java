@@ -8,12 +8,12 @@ import com.perpule.idocstatus.domain.BBIdocStatusDomain;
 
 public class BBIdocStatusBO {
 		private static final Logger LOGGER = Logger.getLogger(BBIdocStatusBO.class.getName());
-        public boolean sendIdocStatus(List<BBIdocStatusDomain> data) {
+        public boolean sendIdocStatus(List<BBIdocStatusDomain> data,String mode) {
         	try {
         		ExecutorService executor = Executors.newFixedThreadPool(10);
         		LOGGER.info("Number of IDOCs Received :" + data.size());
 				for (BBIdocStatusDomain bbIdocStatusDomain : data) {
-					executor.submit(new BBIdocStatusProcess(bbIdocStatusDomain));
+					executor.submit(new BBIdocStatusProcess(bbIdocStatusDomain,mode));
 				} 
 				return true;
 			} catch (Exception e ) {

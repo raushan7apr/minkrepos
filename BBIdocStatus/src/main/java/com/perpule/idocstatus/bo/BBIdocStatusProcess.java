@@ -26,9 +26,10 @@ public class BBIdocStatusProcess implements Runnable{
 	
 	private BBIdocStatusDomain bbIdocStatusDomain;
 	private static final Logger LOGGER = Logger.getLogger(BBIdocStatusProcess.class.getName());
-	
-	public BBIdocStatusProcess(BBIdocStatusDomain bbIdocStatusDomain) {
+	private String mode;
+	public BBIdocStatusProcess(BBIdocStatusDomain bbIdocStatusDomain,String mode) {
 		this.bbIdocStatusDomain = bbIdocStatusDomain;
+		this.mode=mode;
 	}
 	
 	public void run() {
@@ -39,9 +40,17 @@ public class BBIdocStatusProcess implements Runnable{
 			String jsonReqData = gson.toJson(bbIdocStatusDomain);
 			HTTPResponseObject hTTPResponseObject=null;
 			boolean status=false;
+			String API_URL=IDOCConstants.TEST_API_URL;
+			String MQ_URL=IDOCConstants.TEST_MQ_URL;
+			String MQ_SUBJECT=IDOCConstants.TEST_MQ_SUBJECT;
 			try {
+				if("PROD".equalsIgnoreCase(mode)) {
+					API_URL = IDOCConstants.PROD_API_URL;
+					MQ_URL = IDOCConstants.PROD_MQ_URL;
+					MQ_SUBJECT = IDOCConstants.PROD_MQ_SUBJECT;
+				}
 				hTTPResponseObject = HTTPUtility
-						.invokeHTTPRequestAndGetResponse(IDOCConstants.API_URL, "POST", headers, jsonReqData);
+						.invokeHTTPRequestAndGetResponse(API_URL, "POST", headers, jsonReqData);
 				String firstResponse = hTTPResponseObject.getResult();
 				if(firstResponse!=null) {
 					JSONObject obj =  new JSONObject(firstResponse);
@@ -53,7 +62,7 @@ public class BBIdocStatusProcess implements Runnable{
 						LOGGER.info("Sleeping for 2 Minutes..");
 						Thread.sleep(2000);
 						LOGGER.info("UP after 2 minutes!!");
-						hTTPResponseObject = HTTPUtility.invokeHTTPRequestAndGetResponse(IDOCConstants.API_URL,
+						hTTPResponseObject = HTTPUtility.invokeHTTPRequestAndGetResponse(API_URL,
 								"POST", headers, jsonReqData);
 						String lastResponse = hTTPResponseObject.getResult();
 						if(lastResponse!=null) {
@@ -68,7 +77,7 @@ public class BBIdocStatusProcess implements Runnable{
 			}
 			if (hTTPResponseObject == null || status == false) {
 				LOGGER.info("Sending via Messaging Queue...");
-				MQPosting(jsonReqData, IDOCConstants.MQ_URL, IDOCConstants.MQ_SUBJECT);
+				MQPosting(jsonReqData, MQ_URL, MQ_SUBJECT);
 			}else {
 				LOGGER.info("Sent via API...");
 			}

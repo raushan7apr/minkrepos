@@ -2,10 +2,12 @@ package com.perpule.idocstatus.resource;
 
 import java.util.List;
 import javax.ws.rs.Consumes;
+import javax.ws.rs.DefaultValue;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
+import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import com.perpule.idocstatus.bo.BBIdocStatusBO;
@@ -17,8 +19,8 @@ public class BBIdocStatusResource {
 	@POST
 	@Path("/sendIdocStatus")
 	@Consumes(MediaType.APPLICATION_JSON)
-	public Response sendIdocStatus(List<BBIdocStatusDomain> bbIdocStatusDomainList) {
-		boolean status = new BBIdocStatusBO().sendIdocStatus(bbIdocStatusDomainList);
+	public Response sendIdocStatus(List<BBIdocStatusDomain> bbIdocStatusDomainList,@DefaultValue("QA") @QueryParam("mode") String mode) {
+		boolean status = new BBIdocStatusBO().sendIdocStatus(bbIdocStatusDomainList,mode);
 		if(status) {
 			return Response.status(200).entity("Success").build();
 		}else {

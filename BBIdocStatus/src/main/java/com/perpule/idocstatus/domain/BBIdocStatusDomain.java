@@ -7,6 +7,7 @@ public class BBIdocStatusDomain {
 	String idocProcessStatus;
 	String remarks;
 	String sourceSystemId;
+	String idocType;
 	BBIdocStatusDetailDomain idocUpdateFor;
 	
 	public String getIdocInTime() {
@@ -50,5 +51,12 @@ public class BBIdocStatusDomain {
 	}
 	public void setIdocUpdateFor(BBIdocStatusDetailDomain idocUpdateFor) {
 		this.idocUpdateFor = idocUpdateFor;
-	}	
+	}
+	public String getIdocType() {
+		return idocType;
+	}
+	public void setIdocType(String idocType) {
+		this.idocType = idocType;
+	}
+	
 }
