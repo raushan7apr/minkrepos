@@ -1,9 +1,14 @@
 package com.perpule.idocstatus.bo;
 
 import java.io.InterruptedIOException;
+import java.text.DateFormat;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.TimeZone;
 import java.util.logging.Logger;
 import javax.jms.Connection;
 import javax.jms.ConnectionFactory;
@@ -14,6 +19,7 @@ import javax.jms.Session;
 import javax.jms.TextMessage;
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.commons.lang3.exception.ExceptionUtils;
+import org.apache.commons.lang3.time.DateUtils;
 import org.json.JSONObject;
 
 import com.google.gson.Gson;
@@ -37,6 +43,9 @@ public class BBIdocStatusProcess implements Runnable{
 			Map<String, String> headers = new HashMap<String, String>();
 			headers.put("Content-Type", "application/json");
 			Gson gson = new Gson();
+			bbIdocStatusDomain.setIdocInTime(convertToIst(bbIdocStatusDomain.getIdocInTime()));
+			bbIdocStatusDomain.setIdocConversionTime(convertToIst(bbIdocStatusDomain.getIdocConversionTime()));
+			bbIdocStatusDomain.setIdocProcessTime(convertToIst(bbIdocStatusDomain.getIdocProcessTime()));
 			String jsonReqData = gson.toJson(bbIdocStatusDomain);
 			HTTPResponseObject hTTPResponseObject=null;
 			boolean status=false;
@@ -48,6 +57,10 @@ public class BBIdocStatusProcess implements Runnable{
 					API_URL = IDOCConstants.PROD_API_URL;
 					MQ_URL = IDOCConstants.PROD_MQ_URL;
 					MQ_SUBJECT = IDOCConstants.PROD_MQ_SUBJECT;
+				}else if("LOCAL".equalsIgnoreCase(mode)) {
+					API_URL = IDOCConstants.LOCAL_API_URL;
+					MQ_URL = IDOCConstants.LOCAL_MQ_URL;
+					MQ_SUBJECT = IDOCConstants.LOCAL_MQ_SUBJECT;
 				}
 				hTTPResponseObject = HTTPUtility
 						.invokeHTTPRequestAndGetResponse(API_URL, "POST", headers, jsonReqData);
@@ -76,10 +89,10 @@ public class BBIdocStatusProcess implements Runnable{
 				LOGGER.severe(ExceptionUtils.getStackTrace(e));
 			}
 			if (hTTPResponseObject == null || status == false) {
-				LOGGER.info("Sending via Messaging Queue...");
+				LOGGER.info("IDOC No - " + bbIdocStatusDomain.getIdocUpdateFor().getIdocNumber() + " for " + bbIdocStatusDomain.getIdocUpdateFor().getSiteCode() + " has been sent through MQ!!");
 				MQPosting(jsonReqData, MQ_URL, MQ_SUBJECT);
 			}else {
-				LOGGER.info("Sent via API...");
+				LOGGER.info("IDOC No - " + bbIdocStatusDomain.getIdocUpdateFor().getIdocNumber() + " for " + bbIdocStatusDomain.getIdocUpdateFor().getSiteCode() + " has been sent through API!!");
 			}
 		} catch (Exception e) {
 			LOGGER.severe(ExceptionUtils.getStackTrace(e));
@@ -98,5 +111,10 @@ public class BBIdocStatusProcess implements Runnable{
 	        producer.send(message);
 	        connection.close();
      }
-	
+	 public String convertToIst(String dateString) throws ParseException {
+		 SimpleDateFormat isoFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+		 Date date = isoFormat.parse(dateString);
+		 Date newDate = DateUtils.addMinutes(date, 330);
+		 return isoFormat.format(newDate);
+	 }
 }
