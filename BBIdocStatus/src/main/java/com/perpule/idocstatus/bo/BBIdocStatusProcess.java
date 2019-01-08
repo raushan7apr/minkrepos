@@ -113,8 +113,12 @@ public class BBIdocStatusProcess implements Runnable{
      }
 	 public String convertToIst(String dateString) throws ParseException {
 		 SimpleDateFormat isoFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-		 Date date = isoFormat.parse(dateString);
-		 Date newDate = DateUtils.addMinutes(date, 330);
-		 return isoFormat.format(newDate);
+		 if(dateString != null) {
+			 Date date = isoFormat.parse(dateString);
+			 Date newDate = DateUtils.addMinutes(date, 330);
+			 return isoFormat.format(newDate);
+		 }else {
+			 return "";
+		 }
 	 }
 }
